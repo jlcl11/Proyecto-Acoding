@@ -71,7 +71,7 @@ struct Manga: Identifiable, Hashable, Sendable {
         formatter.dateFormat = "yyyy"
 
         let start = startDate.map { formatter.string(from: $0) } ?? "?"
-        let end = endDate.map { formatter.string(from: $0) } ?? "Ongoing"
+        let end = endDate.map { formatter.string(from: $0) } ?? "Actualidad"
 
         return "\(start) - \(end)"
     }
