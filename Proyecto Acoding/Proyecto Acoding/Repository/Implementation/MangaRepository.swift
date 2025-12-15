@@ -11,6 +11,7 @@ import Foundation
 class MangaRepository: MangaRepositoryProtocol {
 
     private let apiClient: APIClient
+    private let cache = CacheManager.shared
 
     init(apiClient: APIClient = APIClient()) {
         self.apiClient = apiClient
@@ -21,26 +22,85 @@ class MangaRepository: MangaRepositoryProtocol {
 
     func getMangas(page: Int, per: Int) async throws -> PaginatedResponse<Manga> {
         print("📚 MangaRepository: Getting mangas (page: \(page), per: \(per))")
+
+        let cacheKey = CacheKey.mangaList(page: page, per: per)
+
+        // Check cache first
+        if let cached: PaginatedResponse<Manga> = await cache.get(forKey: cacheKey) {
+            print("✅ MangaRepository: Returned cached mangas")
+            return cached
+        }
+
+        // Fetch from API
         let result = try await apiClient.getMangas(page: page, per: per)
-        print("✅ MangaRepository: Got \(result.items.count) mangas")
+        print("✅ MangaRepository: Got \(result.items.count) mangas from API")
+
+        // Cache the result (5 minutes)
+        await cache.set(result, forKey: cacheKey, expirationTime: 300)
+
         return result
     }
 
     func getBestMangas(page: Int, per: Int) async throws -> PaginatedResponse<Manga> {
         print("📚 MangaRepository: Getting best mangas")
-        return try await apiClient.getBestMangas(page: page, per: per)
+
+        let cacheKey = CacheKey.bestMangas(page: page, per: per)
+
+        // Check cache first
+        if let cached: PaginatedResponse<Manga> = await cache.get(forKey: cacheKey) {
+            print("✅ MangaRepository: Returned cached best mangas")
+            return cached
+        }
+
+        // Fetch from API
+        let result = try await apiClient.getBestMangas(page: page, per: per)
+
+        // Cache the result (5 minutes)
+        await cache.set(result, forKey: cacheKey, expirationTime: 300)
+
+        return result
     }
 
     func getManga(id: Int) async throws -> Manga {
         print("📚 MangaRepository: Getting manga with id \(id)")
-        return try await apiClient.getManga(id: id)
+
+        let cacheKey = CacheKey.manga(id: id)
+
+        // Check cache first
+        if let cached: Manga = await cache.get(forKey: cacheKey) {
+            print("✅ MangaRepository: Returned cached manga")
+            return cached
+        }
+
+        // Fetch from API
+        let result = try await apiClient.getManga(id: id)
+
+        // Cache the result (10 minutes - detail pages change less frequently)
+        await cache.set(result, forKey: cacheKey, expirationTime: 600)
+
+        return result
     }
 
     // MARK: - Search
 
     func searchMangas(query: CustomSearchDTO, page: Int, per: Int) async throws -> PaginatedResponse<Manga> {
         print("📚 MangaRepository: Searching mangas")
-        return try await apiClient.searchMangas(query: query, page: page, per: per)
+
+        let cacheKey = CacheKey.search(query: query, page: page, per: per)
+
+        // Check cache first
+        if let cached: PaginatedResponse<Manga> = await cache.get(forKey: cacheKey) {
+            print("✅ MangaRepository: Returned cached search results")
+            return cached
+        }
+
+        // Fetch from API
+        let result = try await apiClient.searchMangas(query: query, page: page, per: per)
+
+        // Cache the result (3 minutes - searches change more frequently)
+        await cache.set(result, forKey: cacheKey, expirationTime: 180)
+
+        return result
     }
 
     // MARK: - Filters
