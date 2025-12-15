@@ -11,7 +11,7 @@ import SwiftUI
 struct Proyecto_AcodingApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
         }
     }
 }

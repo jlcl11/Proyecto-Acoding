@@ -70,19 +70,6 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("Mis Mangas")
-            .toolbar {
-                if viewModel.state == .loaded {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            Task {
-                                await viewModel.refresh()
-                            }
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
-                        }
-                    }
-                }
-            }
         }
         .task {
             if viewModel.state == .idle {
