@@ -151,9 +151,16 @@ class APIClient {
     func login(email: String, password: String) async throws -> String {
         print("📱 APIClient: Logging in user with email '\(email)'")
 
+        // Try sending credentials in BOTH Authorization header AND body
+        // Some APIs require both despite standard Basic Auth practice
+        var request = URLRequest.postWithBasicAuth(url: .login, username: email, password: password)
+
+        // Also add body with credentials
         let body = UserDTO(email: email, password: password)
-        // POST to /users/login with Basic Authentication
-        let request = try URLRequest.postWithBasicAuth(url: .login, body: body, username: email, password: password)
+        if let bodyData = try? JSONEncoder().encode(body) {
+            request.httpBody = bodyData
+            print("📦 Login request - Body included: {\"email\": \"\(email)\", \"password\": \"\(password)}")
+        }
 
         let response: TokenResponseDTO = try await network.execute(request)
         print("✅ APIClient: Login successful, got token")

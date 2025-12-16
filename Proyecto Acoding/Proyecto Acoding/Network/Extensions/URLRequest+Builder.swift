@@ -43,14 +43,26 @@ extension URLRequest {
         return request
     }
 
-    /// POST request with Basic Authentication
-    static func postWithBasicAuth<T: Encodable>(url: URL, body: T, username: String, password: String) throws -> URLRequest {
-        var request = try post(url: url, body: body)
+    /// POST request with Basic Authentication (credentials in Authorization header only)
+    static func postWithBasicAuth(url: URL, username: String, password: String) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.httpMethod = HTTPMethod.post.rawValue
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
 
+        // Encode credentials as Base64 for Basic Auth
         let credentials = "\(username):\(password)"
         if let credentialsData = credentials.data(using: .utf8) {
             let base64Credentials = credentialsData.base64EncodedString()
-            request.setValue("Basic \(base64Credentials)", forHTTPHeaderField: "Authorization")
+            let authHeader = "Basic \(base64Credentials)"
+            request.setValue(authHeader, forHTTPHeaderField: "Authorization")
+
+            // Debug logging
+            print("🔐 Basic Auth - Username: '\(username)'")
+            print("🔐 Basic Auth - Password length: \(password.count) chars")
+            print("🔐 Basic Auth - Credentials string: '\(credentials)...'")
+            print("🔐 Basic Auth - Base64: \(base64Credentials)...")
+            print("🔐 Basic Auth - Header: \(authHeader.prefix(40))...")
         }
 
         return request
