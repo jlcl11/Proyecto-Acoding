@@ -65,6 +65,20 @@ extension URL {
         apiBase.appendingPathComponent("search/manga")
     }
 
+    // MARK: - Authentication Endpoints
+
+    static var register: URL {
+        apiBase.appendingPathComponent("users")
+    }
+
+    static var login: URL {
+        apiBase.appendingPathComponent("users/login")
+    }
+
+    static var renewToken: URL {
+        apiBase.appendingPathComponent("users/renew")
+    }
+
     // MARK: - Pagination Helper
 
     func withPagination(page: Int, per: Int = 10) -> URL {

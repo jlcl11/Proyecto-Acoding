@@ -32,4 +32,34 @@ extension URLRequest {
         request.httpMethod = HTTPMethod.delete.rawValue
         return request
     }
+
+    // MARK: - Authentication Request Builders
+
+    /// POST request with App-Token header for registration
+    /// The App-Token is required by the API to identify the app (PDF spec page 4)
+    static func postWithAppToken<T: Encodable>(url: URL, body: T) throws -> URLRequest {
+        var request = try post(url: url, body: body)
+        request.setValue(APIConstants.appToken, forHTTPHeaderField: "App-Token")
+        return request
+    }
+
+    /// POST request with Basic Authentication
+    static func postWithBasicAuth<T: Encodable>(url: URL, body: T, username: String, password: String) throws -> URLRequest {
+        var request = try post(url: url, body: body)
+
+        let credentials = "\(username):\(password)"
+        if let credentialsData = credentials.data(using: .utf8) {
+            let base64Credentials = credentialsData.base64EncodedString()
+            request.setValue("Basic \(base64Credentials)", forHTTPHeaderField: "Authorization")
+        }
+
+        return request
+    }
+
+    /// POST request with Bearer Token
+    static func postWithBearerToken<T: Encodable>(url: URL, body: T, token: String) throws -> URLRequest {
+        var request = try post(url: url, body: body)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        return request
+    }
 }

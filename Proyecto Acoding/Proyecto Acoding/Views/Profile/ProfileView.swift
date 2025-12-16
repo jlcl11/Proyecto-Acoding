@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @State private var userName = "Usuario"
+    @Environment(AuthViewModel.self) private var authViewModel
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -28,7 +28,7 @@ struct ProfileView: View {
                             }
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(userName)
+                            Text(authViewModel.email.isEmpty ? "Usuario" : authViewModel.email)
                                 .font(.title2)
                                 .fontWeight(.bold)
 
@@ -120,7 +120,9 @@ struct ProfileView: View {
                 // Logout
                 Section {
                     Button(role: .destructive) {
-                        // Logout action
+                        Task {
+                            await authViewModel.logout()
+                        }
                     } label: {
                         HStack {
                             Spacer()
@@ -158,4 +160,10 @@ struct StatItem: View {
 
 #Preview {
     ProfileView()
+        .environment(AuthViewModel(
+            repository: AuthRepository(
+                tokenManager: TokenManager(keychainService: KeychainService())
+            ),
+            keychainService: KeychainService()
+        ))
 }

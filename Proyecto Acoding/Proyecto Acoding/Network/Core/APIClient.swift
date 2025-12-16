@@ -134,4 +134,41 @@ class APIClient {
         let response: PaginatedResponseDTO<MangaDTO> = try await network.execute(request)
         return mangaMapper.mapPaginated(response)
     }
+
+    // MARK: - Authentication
+
+    func register(email: String, password: String) async throws {
+        print("📱 APIClient: Registering user with email '\(email)'")
+
+        let body = UserDTO(email: email, password: password)
+        // POST to /users with App-Token header
+        let request = try URLRequest.postWithAppToken(url: .register, body: body)
+
+        let _: String? = try? await network.execute(request)
+        print("✅ APIClient: User registered successfully")
+    }
+
+    func login(email: String, password: String) async throws -> String {
+        print("📱 APIClient: Logging in user with email '\(email)'")
+
+        let body = UserDTO(email: email, password: password)
+        // POST to /users/login with Basic Authentication
+        let request = try URLRequest.postWithBasicAuth(url: .login, body: body, username: email, password: password)
+
+        let response: TokenResponseDTO = try await network.execute(request)
+        print("✅ APIClient: Login successful, got token")
+        return response.token
+    }
+
+    func renewToken(_ token: String) async throws -> String {
+        print("📱 APIClient: Renewing token")
+
+        let body = TokenResponseDTO(token: token)
+        // POST to /users/renew with Bearer token in Authorization header
+        let request = try URLRequest.postWithBearerToken(url: .renewToken, body: body, token: token)
+
+        let response: TokenResponseDTO = try await network.execute(request)
+        print("✅ APIClient: Token renewed successfully")
+        return response.token
+    }
 }
