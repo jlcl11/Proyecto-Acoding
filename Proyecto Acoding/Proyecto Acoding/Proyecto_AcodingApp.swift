@@ -42,16 +42,19 @@ struct Proyecto_AcodingApp: App {
                             .font(.largeTitle.bold())
                         ProgressView()
                     }
+                    .environment(\.colorScheme, .light)
 
                 case .unauthenticated, .authenticating, .error:
                     // Show login view with sheet for register
                     LoginView()
                         .environment(authViewModel)
+                        .environment(\.colorScheme, .light)
 
                 case .authenticated:
                     // Show main app
                     MainTabView()
                         .environment(authViewModel)
+                        .environment(\.colorScheme, .light)
                 }
             }
             .task {
