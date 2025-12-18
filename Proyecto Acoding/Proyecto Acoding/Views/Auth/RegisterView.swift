@@ -70,6 +70,12 @@ struct RegisterView: View {
                                     .onSubmit {
                                         focusedField = .password
                                     }
+                                    .onChange(of: vm.email) { oldValue, newValue in
+                                        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        if trimmed != newValue {
+                                            vm.email = trimmed
+                                        }
+                                    }
                             }
                             .padding()
                             .background(Color(.systemGray6))
@@ -101,13 +107,19 @@ struct RegisterView: View {
                                     .frame(width: 20)
 
                                 SecureField("Mínimo 8 caracteres", text: $vm.password)
-                                    .textContentType(.newPassword)
+                                    .textContentType(.password)
                                     .focused($focusedField, equals: .password)
                                     .submitLabel(.next)
                                     .tint(.blue)
                                     .foregroundStyle(.primary)
                                     .onSubmit {
-                                        focusedField = .confirmPassword
+                                        focusedField = .password
+                                    }
+                                    .onChange(of: vm.password) { oldValue, newValue in
+                                        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        if trimmed != newValue {
+                                            vm.password = trimmed
+                                        }
                                     }
                             }
                             .padding()
@@ -140,8 +152,8 @@ struct RegisterView: View {
                                     .frame(width: 20)
 
                                 SecureField("Repite tu contraseña", text: $vm.confirmPassword)
-                                    .textContentType(.newPassword)
-                                    .focused($focusedField, equals: .confirmPassword)
+                                    .textContentType(.password)
+                                    .focused($focusedField, equals: .password)
                                     .submitLabel(.go)
                                     .tint(.blue)
                                     .foregroundStyle(.primary)
@@ -149,6 +161,12 @@ struct RegisterView: View {
                                         if viewModel.canRegister {
                                             focusedField = nil
                                             Task { await viewModel.register() }
+                                        }
+                                    }
+                                    .onChange(of: vm.confirmPassword) { oldValue, newValue in
+                                        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        if trimmed != newValue {
+                                            vm.confirmPassword = trimmed
                                         }
                                     }
                             }
@@ -239,7 +257,6 @@ struct RegisterView: View {
                 }
             }
             .background(Color(.systemBackground))
-            .navigationTitle("Crear cuenta")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

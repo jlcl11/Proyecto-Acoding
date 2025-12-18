@@ -89,6 +89,12 @@ struct LoginView: View {
                                             .onSubmit {
                                                 focusedField = .password
                                             }
+                                            .onChange(of: vm.email) { oldValue, newValue in
+                                                let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                                                if trimmed != newValue {
+                                                    vm.email = trimmed
+                                                }
+                                            }
                                     }
                                     .padding()
                                     .background(Color(.systemGray6))
@@ -120,6 +126,12 @@ struct LoginView: View {
                                             .onSubmit {
                                                 if viewModel.canLogin {
                                                     Task { await viewModel.login() }
+                                                }
+                                            }
+                                            .onChange(of: vm.password) { oldValue, newValue in
+                                                let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                                                if trimmed != newValue {
+                                                    vm.password = trimmed
                                                 }
                                             }
                                     }

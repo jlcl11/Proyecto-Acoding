@@ -30,21 +30,20 @@ final class AuthViewModel {
     }
 
     var isValidEmail: Bool {
-        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedEmail.isEmpty else { return false }
+        // Email is already trimmed via onChange in the view
+        guard !email.isEmpty else { return false }
         let emailRegex = #"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
-        return trimmedEmail.range(of: emailRegex, options: .regularExpression) != nil
+        return email.range(of: emailRegex, options: .regularExpression) != nil
     }
 
     var isValidPassword: Bool {
-        let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmedPassword.count >= 8
+        // Password is already trimmed via onChange in the view
+        return password.count >= 8
     }
 
     var passwordsMatch: Bool {
-        let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedConfirm = confirmPassword.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmedPassword == trimmedConfirm && !trimmedPassword.isEmpty
+        // Passwords are already trimmed via onChange in the view
+        return password == confirmPassword && !password.isEmpty
     }
 
     var canLogin: Bool {
@@ -109,18 +108,23 @@ final class AuthViewModel {
         error = nil
 
         do {
-            // Trim whitespace from email and password
-            let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-            let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Email and password are already trimmed via onChange in the view
+            print("🔐 LOGIN - Email: '\(email)'")
+            print("🔐 LOGIN - Password length: \(password.count) chars")
+            print("🔐 LOGIN - Password first/last chars: '\(password.prefix(1))' / '\(password.suffix(1))'")
 
-            let token = try await repository.login(email: trimmedEmail, password: trimmedPassword)
+            let token = try await repository.login(email: email, password: password)
+
+            print("✅ LOGIN - Success! Got token")
             try await keychainService.save(token: token)
             clearForm()
             state = .authenticated
         } catch let authError as AuthError {
+            print("❌ LOGIN - Failed: \(authError.localizedDescription)")
             state = .unauthenticated
             self.error = authError.localizedDescription
         } catch {
+            print("❌ LOGIN - Failed: \(error.localizedDescription)")
             state = .unauthenticated
             self.error = "Ha ocurrido un error inesperado"
         }
@@ -136,15 +140,16 @@ final class AuthViewModel {
         error = nil
 
         do {
-            // Trim whitespace from email and password
-            let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-            let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Email and password are already trimmed via onChange in the view
+            print("🔐 REGISTER - Email: '\(email)'")
+            print("🔐 REGISTER - Password length: \(password.count) chars")
+            print("🔐 REGISTER - Password first/last chars: '\(password.prefix(1))' / '\(password.suffix(1))'")
 
-            // Update the form fields with trimmed values
-            email = trimmedEmail
-            password = trimmedPassword
+            try await repository.register(email: email, password: password)
 
-            try await repository.register(email: trimmedEmail, password: trimmedPassword)
+            print("✅ REGISTER - Account created successfully")
+            print("🔐 REGISTER - About to auto-login with email: '\(email)'")
+            print("🔐 REGISTER - About to auto-login with password length: \(password.count)")
 
             // Small delay to allow server to propagate the new account
             try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
@@ -152,12 +157,14 @@ final class AuthViewModel {
             // Auto-login after registration
             await login()
         } catch let authError as AuthError {
+            print("❌ REGISTER - Failed: \(authError.localizedDescription)")
             state = .unauthenticated
             self.error = authError.localizedDescription
         } catch is CancellationError {
             // Task was cancelled, ignore
             state = .unauthenticated
         } catch {
+            print("❌ REGISTER - Failed: \(error.localizedDescription)")
             state = .unauthenticated
             self.error = "No se pudo crear la cuenta"
         }
